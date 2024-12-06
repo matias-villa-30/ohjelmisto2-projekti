@@ -7,6 +7,12 @@ let dice_roll_counter = 1; // Counts total rolls
 let current_player = 1;    // Tracks the current player's turn (1 or 2)
 let points_player1 = 0;
 let points_player2 = 0;
+let wrong_answers_player1 = 0;
+let wrong_answers_player2 = 0;
+let right_answers_player1 = 0;
+let right_answers_player2 = 0;
+let random_event_player1 = 0;
+let random_event_player2 = 0;
 
 // Roll Dice Functionality
 function roll_dice() {
@@ -52,32 +58,38 @@ function randomEvent(player) {
   const events = [
     () => {
       points_player1 += 200;
+      random_event_player1 ++;
       alert("Event: Player 1 gains 200 points!");
       console.log("Event: Player 1 gains 200 points!");
     },
     () => {
       points_player2 += 200;
+      random_event_player2 ++;
       alert("Event: Player 2 gains 200 points!");
       console.log("Event: Player 2 gains 200 points!");
     },
     () => {
       points_player1 = 0;
+      random_event_player1++;
       alert("Event: Player 1 points reset to 0!");
       console.log("Event: Player 1 points reset to 0!");
     },
     () => {
       points_player2 = 0;
+      random_event_player2++;
       alert("Event: Player 2 points reset to 0!");
       console.log("Event: Player 2 points reset to 0!");
     },
     () => {
       points_player1 = 1000;
+      random_event_player1++;
       console.log("Event: Player 1 wins the game with 1000 points!");
       alert("Event: Player 1 wins the game with 1000 points!");
       declareWinner(1);
     },
     () => {
       points_player2 = 1000;
+      random_event_player2++;
       alert("Event: Player 2 wins the game with 1000 points!");
       console.log("Event: Player 2 wins the game with 1000 points!");
       declareWinner(2);
@@ -108,14 +120,16 @@ async function fetchCountriesData() {
 }
 
 async function show_question1() {
+  // Get DOM elements
   const titulo = document.getElementById("titulo");
-  const results = document.getElementById("banderas");
-  const check_box_container = document.getElementById("respuestas");
-  const send_answer = document.getElementById("submit-answer");
-  const next_question = document.getElementById('next-question');
+  const results = document.getElementById("banderas"); // Use "banderas" for the flag image
+  const check_box_container = document.getElementById("respuestas"); // Use "respuestas" for the answer options
+  const send_answer = document.getElementById("submit-answer"); // Button to submit the answer
+  const next_question = document.getElementById("next-question");
   next_question.disabled = true;
 
-  if (!titulo || !results || !check_box_container) {
+  // Validate required elements
+  if (!titulo || !results || !check_box_container || !send_answer) {
     console.error("Missing required elements in the DOM.");
     return;
   }
@@ -125,78 +139,116 @@ async function show_question1() {
   results.innerHTML = "";
   check_box_container.innerHTML = "";
 
-  const countriesData = await fetchCountriesData();
-  const validCountries = countriesData.filter(
-    (country) => country.population && country.flags
-  );
+  try {
+    // Fetch countries data
+    const countriesData = await fetchCountriesData();
+    const validCountries = countriesData.filter(
+      (country) => country.population && country.flags
+    );
 
-  const correctCountry = validCountries[Math.floor(Math.random() * validCountries.length)];
-  const correctFlag = correctCountry.flags.png;
-  const correctName = correctCountry.name.common;
+    // Select the correct country
+    const correctCountry = validCountries[Math.floor(Math.random() * validCountries.length)];
+    const correctFlag = correctCountry.flags.png;
+    const correctName = correctCountry.name.common;
 
-  // Display the title as <h1>
-  const h1 = document.createElement("h1");
-  h1.textContent = `Guess the country by its flag`;
-  titulo.appendChild(h1);
+    // Display the title as <h1>
+    const h1 = document.createElement("h1");
+    h1.textContent = `Guess the country by its flag (50pts)`;
+    titulo.appendChild(h1);
 
-  // Display the flag
-  const img = document.createElement("img");
-  img.src = correctFlag;
-  img.alt = `${correctName} flag`;
-  img.style.maxWidth = "100%";
-  results.appendChild(img);
+    // Display the correct country's flag
+    const img = document.createElement("img");
+    img.src = correctFlag;
+    img.alt = `${correctName} flag`;
+    img.style.maxWidth = "100%"; // Ensure the flag is responsive
+    img.style.border = "1px solid #ccc";
+    img.style.borderRadius = "8px";
+    img.style.marginBottom = "10px";
+    results.appendChild(img);
 
-  const wrongCountries = [];
-  while (wrongCountries.length < 3) {
-    const randomCountry = validCountries[Math.floor(Math.random() * validCountries.length)].name.common;
-    if (randomCountry !== correctName && !wrongCountries.includes(randomCountry)) {
-      wrongCountries.push(randomCountry);
-    }
-  }
-
-  const allOptions = shuffleOptions([...wrongCountries, correctName]);
-
-  allOptions.forEach((option, index) => {
-    const label = document.createElement("label");
-    label.textContent = option;
-    const radio = document.createElement("input");
-    radio.type = "radio";
-    radio.value = option;
-    radio.name = "country";
-    radio.id = `radio-${index}`;
-    label.prepend(radio);
-    check_box_container.appendChild(label);
-    check_box_container.appendChild(document.createElement("br"));
-  });
-
-  send_answer.onclick = () => {
-    const selectedOption = document.querySelector('input[name="country"]:checked');
-    if (!selectedOption) {
-      alert("Please select an answer.");
-      return;
-    }
-
-    const selectedValue = selectedOption.value;
-    if (selectedValue === correctName) {
-      alert("Correct answer!");
-      if (current_player === 1) {
-        points_player1 += 50;
-      } else {
-        points_player2 += 50;
+    // Generate 3 incorrect options
+    const wrongCountries = [];
+    while (wrongCountries.length < 3) {
+      const randomCountry = validCountries[Math.floor(Math.random() * validCountries.length)].name.common;
+      if (randomCountry !== correctName && !wrongCountries.includes(randomCountry)) {
+        wrongCountries.push(randomCountry);
       }
-    } else {
-      alert("Wrong answer!");
     }
 
-    updatePointsTable();
-    next_question.disabled = false;
+    // Combine all options and shuffle
+    const allOptions = shuffleOptions([...wrongCountries, correctName]);
 
-    // Check if there is a winner
-    checkWinner();
-  };
+    // Create radio buttons for each option
+    allOptions.forEach((option, index) => {
+      const label = document.createElement("label");
+      label.textContent = option;
+      label.style.fontSize = "1.2rem"; // Larger font size for options
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.value = option; // Use the option as the value
+      radio.name = "country"; // Group all options under the same name
+      radio.id = `radio-${index}`;
+
+      label.prepend(radio);
+      check_box_container.appendChild(label);
+      check_box_container.appendChild(document.createElement("br"));
+    });
+
+    // Add an event listener for the submit button
+    send_answer.onclick = () => {
+      // Get the selected option
+      const selectedOption = document.querySelector('input[name="country"]:checked');
+      if (!selectedOption) {
+        alert("Please select an answer.");
+        return;
+      }
+
+      const selectedValue = selectedOption.value;
+
+      // Check if the selected answer is correct
+      if (selectedValue === correctName) {
+    alert("Correct answer!");
+    if (current_player === 1) {
+        points_player1 += 50;
+        right_answers_player1++;
+    } else {
+        points_player2 += 50;
+        right_answers_player2++;
+    }
+} else {
+    alert("Wrong answer!");
+    if (current_player === 1) {
+        wrong_answers_player1++;
+    } else {
+        wrong_answers_player2++;
+    }
 }
+
+
+      // Update the points table
+      updatePointsTable();
+
+      // Clear containers after the question is answered
+      titulo.innerHTML = "";
+      results.innerHTML = "";
+      check_box_container.innerHTML = "";
+
+      // Enable the next question button
+      next_question.disabled = false;
+
+      // Check if there is a winner
+      checkWinner();
+    };
+  } catch (error) {
+    console.error("Error fetching or processing country data:", error);
+  }
+}
+
+
+
 function checkWinner() {
-  const winningScore = 1000; // Define the winning score
+  const winningScore = 1000;// Define the winning score
   if (points_player1 >= winningScore) {
     declareWinner(1);
   } else if (points_player2 >= winningScore) {
@@ -243,6 +295,12 @@ function resetGame() {
 function updatePointsTable() {
   document.getElementById("player1-points").textContent = points_player1;
   document.getElementById("player2-points").textContent = points_player2;
+  document.getElementById('player1-correct').textContent = right_answers_player1;
+  document.getElementById('player2-correct').textContent = right_answers_player2;
+  document.getElementById('player1-wrong').textContent = wrong_answers_player1;
+  document.getElementById('player2-wrong').textContent = wrong_answers_player2;
+  document.getElementById('player1-events').textContent = random_event_player1;
+  document.getElementById('player2-events').textContent = random_event_player2;
 }
 
 
@@ -262,8 +320,14 @@ async function kysymys2() {
   const results = document.getElementById("banderas"); // Use "banderas" for the flag image
   const check_box_container = document.getElementById("respuestas"); // Use "respuestas" for the answer options
   const send_answer = document.getElementById("submit-answer"); // Button to submit the answer
-  const next_question = document.getElementById('next-question');
+  const next_question = document.getElementById("next-question");
   next_question.disabled = true;
+
+  // Validate required elements
+  if (!titulo || !results || !check_box_container || !send_answer) {
+    console.error("Missing required elements in the DOM.");
+    return;
+  }
 
   // Clear previous content
   titulo.innerHTML = "";
@@ -282,13 +346,19 @@ async function kysymys2() {
     const correctCapital = correctCountry.capital[0];
     const correctFlag = correctCountry.flags.png;
 
-    // Update the question title
-    titulo.textContent = `What is the capital of ${correctCountry.name.common}?`;
+    // Display the title as <h1>
+    const h1 = document.createElement("h1");
+    h1.textContent = `What is the capital of ${correctCountry.name.common}? (100 pts)`;
+    titulo.appendChild(h1);
 
     // Display the correct country's flag
     const img = document.createElement("img");
     img.src = correctFlag;
     img.alt = `${correctCountry.name.common} flag`;
+    img.style.maxWidth = "100%"; // Ensure the flag is responsive
+    img.style.border = "1px solid #ccc";
+    img.style.borderRadius = "8px";
+    img.style.marginBottom = "10px";
     results.appendChild(img);
 
     // Generate wrong options
@@ -307,6 +377,7 @@ async function kysymys2() {
     allOptions.forEach((option, index) => {
       const label = document.createElement("label");
       label.textContent = option;
+      label.style.fontSize = "1.2rem"; // Larger font size for options
 
       const radio = document.createElement("input");
       radio.type = "radio";
@@ -329,31 +400,47 @@ async function kysymys2() {
       }
 
       const selectedValue = selectedOption.value;
-      let pointsToAdd = 100; // Points to add for a correct answer
+
 
       // Check if the selected answer is correct
-      if (selectedValue === correctCapital) {
-        alert("Correct answer!");
-        if (current_player === 1) {
-          points_player1 += pointsToAdd; // Update Player 1's points
-        } else {
-          points_player2 += pointsToAdd; // Update Player 2's points
-        }
-      } else {
-        alert("Wrong answer!");
-      }
+     if (selectedValue === correctName) {
+    alert("Correct answer!");
+    if (current_player === 1) {
+        points_player1 += 50;
+        right_answers_player1++;
+    } else {
+        points_player2 += 50;
+        right_answers_player2++;
+    }
+} else {
+    alert("Wrong answer!");
+    if (current_player === 1) {
+        wrong_answers_player1++;
+    } else {
+        wrong_answers_player2++;
+    }
+}
+
 
       // Update the points table
       updatePointsTable();
 
-      // Enable next question button again
+      // Clear containers after the question is answered
+      titulo.innerHTML = "";
+      results.innerHTML = "";
+      check_box_container.innerHTML = "";
+
+      // Enable the next question button
       next_question.disabled = false;
-      dice_roll_counter++;
+
+      // Check if there is a winner
+      checkWinner();
     };
   } catch (error) {
     console.error("Error fetching or processing country data:", error);
   }
 }
+
 
 // Show Question 3
 async function kysymys3(event) {
@@ -366,12 +453,12 @@ async function kysymys3(event) {
   const results = document.getElementById("banderas"); // Use "banderas" for the flag image
   const check_box_container = document.getElementById("respuestas"); // Use "respuestas" for the answer options
   const send_answer = document.getElementById("submit-answer"); // Button to submit the answer
-  const next_question = document.getElementById('next-question');
+  const next_question = document.getElementById("next-question");
   next_question.disabled = true;
 
-  // Ensure required elements exist
+  // Validate required elements
   if (!titulo || !results || !check_box_container || !send_answer) {
-    console.error("Missing required elements in the DOM. Ensure 'titulo', 'banderas', 'respuestas', and 'submit-answer' exist.");
+    console.error("Missing required elements in the DOM.");
     return;
   }
 
@@ -393,13 +480,19 @@ async function kysymys3(event) {
     const correctFlag = correctCountry.flags.png;
     const correctName = correctCountry.name.common;
 
-    // Update the question title
-    titulo.textContent = `Guess the population of ${correctName}`;
+    // Display the title as <h1>
+    const h1 = document.createElement("h1");
+    h1.textContent = `Guess the population of ${correctName} (75 pts)`;
+    titulo.appendChild(h1);
 
     // Display the correct country's flag
     const img = document.createElement("img");
     img.src = correctFlag;
     img.alt = `${correctName} flag`;
+    img.style.maxWidth = "100%"; // Ensure the flag is responsive
+    img.style.border = "1px solid #ccc";
+    img.style.borderRadius = "8px";
+    img.style.marginBottom = "10px";
     results.appendChild(img);
 
     // Generate wrong options
@@ -419,6 +512,7 @@ async function kysymys3(event) {
     allOptions.forEach((option, index) => {
       const label = document.createElement("label");
       label.textContent = option.toLocaleString(); // Format population with commas
+      label.style.fontSize = "1.2rem"; // Larger font size for options
 
       const radio = document.createElement("input");
       radio.type = "radio";
@@ -441,32 +535,47 @@ async function kysymys3(event) {
       }
 
       const selectedValue = parseInt(selectedOption.value, 10); // Parse the selected value as a number
-      let pointsToAdd = 150; // Points to add for a correct answer
+
 
       // Check if the selected answer is correct
-      if (selectedValue === correctPopulation) {
-        alert("Correct answer!");
-        if (current_player === 1) {
-          points_player1 += pointsToAdd; // Update Player 1's points
-        } else {
-          points_player2 += pointsToAdd; // Update Player 2's points
-        }
-      } else {
-        alert("Wrong answer!");
-      }
+      if (selectedValue === correctName) {
+    alert("Correct answer!");
+    if (current_player === 1) {
+        points_player1 += 75;
+        right_answers_player1++;
+    } else {
+        points_player2 += 75;
+        right_answers_player2++;
+    }
+} else {
+    alert("Wrong answer!");
+    if (current_player === 1) {
+        wrong_answers_player1++;
+    } else {
+        wrong_answers_player2++;
+    }
+}
+
 
       // Update the points table
       updatePointsTable();
-      // Enable next question button back
 
+      // Clear containers after the question is answered
+      titulo.innerHTML = "";
+      results.innerHTML = "";
+      check_box_container.innerHTML = "";
+
+      // Enable the next question button
       next_question.disabled = false;
-      // Increment the dice roll counter (if applicable in your game logic)
-      dice_roll_counter++;
+
+      // Check if there is a winner
+      checkWinner();
     };
   } catch (error) {
     console.error("Error fetching or processing country data:", error);
   }
 }
+
 
 // Show Question 4
 async function kysymys4(event) {
@@ -476,15 +585,15 @@ async function kysymys4(event) {
 
   // Get DOM elements
   const titulo = document.getElementById("titulo");
-  const results = document.getElementById("banderas"); // Use "banderas" for additional information like population
+  const results = document.getElementById("banderas"); // Use "banderas" for the flag image
   const check_box_container = document.getElementById("respuestas"); // Use "respuestas" for the answer options
   const send_answer = document.getElementById("submit-answer"); // Button to submit the answer
-  const next_question = document.getElementById('next-question');
+  const next_question = document.getElementById("next-question");
   next_question.disabled = true;
 
-  // Ensure required elements exist
+  // Validate required elements
   if (!titulo || !results || !check_box_container || !send_answer) {
-    console.error("Missing required elements in the DOM. Ensure 'titulo', 'banderas', 'respuestas', and 'submit-answer' exist.");
+    console.error("Missing required elements in the DOM.");
     return;
   }
 
@@ -497,7 +606,7 @@ async function kysymys4(event) {
     // Fetch countries data
     const countriesData = await fetchCountriesData();
     const validCountries = countriesData.filter(
-      (country) => country.population && country.timezones && country.timezones.length > 0
+      (country) => country.population && country.timezones && country.timezones.length > 0 && country.flags
     );
 
     // Select the correct country and data
@@ -505,11 +614,24 @@ async function kysymys4(event) {
     const correctPopulation = correctCountry.population;
     const correctName = correctCountry.name.common;
     const correctTimezones = correctCountry.timezones;
+    const correctFlag = correctCountry.flags.png;
 
-    // Update the question title
-    titulo.textContent = `Guess the timezones of ${correctName}`;
+    // Display the title as <h1>
+    const h1 = document.createElement("h1");
+    h1.textContent = `Guess the timezones of ${correctName} (150 pts)`;
+    titulo.appendChild(h1);
 
-    // Display the correct country's population in "banderas"
+    // Display the correct country's flag in "banderas"
+    const img = document.createElement("img");
+    img.src = correctFlag;
+    img.alt = `${correctName} flag`;
+    img.style.maxWidth = "100%"; // Ensure the flag is responsive
+    img.style.border = "1px solid #ccc";
+    img.style.borderRadius = "8px";
+    img.style.marginBottom = "10px";
+    results.appendChild(img);
+
+    // Display the correct country's population
     const populationInfo = document.createElement("p");
     populationInfo.textContent = `Population: ${correctPopulation.toLocaleString()}`;
     results.appendChild(populationInfo);
@@ -535,6 +657,7 @@ async function kysymys4(event) {
     allOptions.forEach((option, index) => {
       const label = document.createElement("label");
       label.textContent = option.join(", "); // Combine timezones into a string
+      label.style.fontSize = "1.2rem"; // Larger font size for options
 
       const radio = document.createElement("input");
       radio.type = "radio";
@@ -557,30 +680,45 @@ async function kysymys4(event) {
       }
 
       const selectedValue = selectedOption.value.split(", "); // Split the selected value back into an array
-      let pointsToAdd = 75; // Points to add for a correct answer
+
 
       // Check if the selected answer is correct
-      const isCorrect = selectedValue.every((timezone) => correctTimezones.includes(timezone));
-      if (isCorrect) {
-        alert("Correct answer!");
-        if (current_player === 1) {
-          points_player1 += pointsToAdd; // Update Player 1's points
-        } else {
-          points_player2 += pointsToAdd; // Update Player 2's points
-        }
-      } else {
-        alert("Wrong answer!");
-      }
+      if (selectedValue === correctName) {
+    alert("Correct answer!");
+    if (current_player === 1) {
+        points_player1 += 150;
+        right_answers_player1++;
+    } else {
+        points_player2 += 150;
+        right_answers_player2++;
+    }
+} else {
+    alert("Wrong answer!");
+    if (current_player === 1) {
+        wrong_answers_player1++;
+    } else {
+        wrong_answers_player2++;
+    }
+}
+
 
       // Update the points table
       updatePointsTable();
-      // Enable next question button back
 
+      // Enable the next question button
       next_question.disabled = false;
-      // Increment the dice roll counter (if applicable in your game logic)
-      dice_roll_counter++;
+
+      // Clear containers after the question is answered
+      titulo.innerHTML = "";
+      results.innerHTML = "";
+      check_box_container.innerHTML = "";
+
+      // Check if there is a winner
+      checkWinner();
     };
   } catch (error) {
     console.error("Error fetching or processing country data:", error);
   }
 }
+
+
