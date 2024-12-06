@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohjelmisto 2 Projekti</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">Flight Quiz - Battle Royale</div>
+
+        <!-- Left Sidebar -->
+        <div class="left-sidebar">
+            <!-- Rules Section -->
+            <div class="box" id="box_rules">
+                <p>
+                    Game starts after selecting the name of the players. Then, they will travel to different countries and answer questions about that country, which will win or lose them points.
+                </p>
+                <p>It finishes when the first player reaches 1000 points.</p>
+                <p><strong>Note:</strong> There are also surprise events instead of questions.</p>
+            </div>
+
+            <!-- Image Section -->
+            <img src="{{ url_for('static', filename='brujula.jpg') }}" alt="Compass" style="display: block; margin: 20px auto; max-width: 100%; border-radius: 10px;">
+
+            <!-- Group Members Section -->
+            <div class="box" id="box_group_members">
+                <p class="title">Group 5</p>
+                <ul class="group-list">
+                    <li>Michael Blas Palpa</li>
+                    <li>Mim Farha</li>
+                    <li>Matias Villa</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <div id="titulo"></div>
+            <div class="image" id="banderas"></div>
+            <div class="answer-box" id="respuestas"></div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="right-sidebar">
+            <!-- Buttons -->
+            <div class="button_container">
+                <button class="button" id="start-button" onclick="player_name()">Start</button>
+                <button class="button" id="quit-button">Quit</button>
+            </div>
+
+            <!-- Player Data Section -->
+            <div class="player-data-container" id="player-data">
+
+                <ul id="player-containers">
+                    <!-- Players will be dynamically added here -->
+                </ul>
+            </div>
+
+            <!-- Player Stats Section -->
+            <div class="player-stats" id="stats-box">
+                <!-- Player stats will be dynamically inserted here -->
+            </div>
+
+            <!-- Score Box Section -->
+            <div class="score-box" id="score-box">
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='game.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='questions.js') }}" defer></script>
+</body>
+</html>
